@@ -1,5 +1,7 @@
-package com.example.authnuzhat.security.jwt.models;
+package com.example.authnuzhat.security.jwt;
 
+import com.example.authnuzhat.models.User;
+import com.example.authnuzhat.security.jwt.models.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;

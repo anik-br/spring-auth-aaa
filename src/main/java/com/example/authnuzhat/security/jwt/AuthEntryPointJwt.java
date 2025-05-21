@@ -1,4 +1,4 @@
-package com.example.authnuzhat.security.jwt.models;
+package com.example.authnuzhat.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;

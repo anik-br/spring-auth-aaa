@@ -1,4 +1,4 @@
-package com.example.authnuzhat.security.jwt.models;
+package com.example.authnuzhat.security.jwt;
 
 import com.example.authnuzhat.security.services.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;

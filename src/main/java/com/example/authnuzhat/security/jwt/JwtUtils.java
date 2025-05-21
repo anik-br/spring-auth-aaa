@@ -1,4 +1,4 @@
-package com.example.authnuzhat.security.jwt.models;
+package com.example.authnuzhat.security.jwt;
 
 import com.example.authnuzhat.security.services.UserDetailsImpl;
 import io.jsonwebtoken.*;
@@ -70,7 +70,7 @@ public class JwtUtils {
 
     public String generateTokenFromUsername(String username) {
         return Jwts.builder().setSubject(username).setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs)).signWith(key(), SignatureAlgorithm.HS512)
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs)).signWith(key(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
