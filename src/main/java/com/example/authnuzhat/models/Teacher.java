@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Entity
 @Getter
 @Setter
@@ -13,19 +15,21 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Teacher {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // Use the same ID as the User entity for 1-to-1 relationship
 
-    private String name;
-
-    @Column(unique = true)
-    private String email;
+    @OneToOne
+    @MapsId // Maps the primary key of the owning entity (User) to this entity
+    @JoinColumn(name = "user_id") // Optional, but good for clarity
+    private User user;
 
     @ManyToOne
     @JoinColumn(name = "organization_id")
     private Organization organization;
 
-    // Optional: relation with User entity if you want
-    @OneToOne
-    private User user;
+    private String contactNumber;
+    private String department;
+    private String qualifications;
+
+    private LocalDate joinDate;
+
 }
