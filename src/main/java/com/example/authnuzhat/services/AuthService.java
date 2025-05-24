@@ -17,62 +17,63 @@ import java.util.Set;
 @Service
 public class AuthService {
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private RoleRepository roleRepository;
-    @Autowired
-    private PasswordEncoder encoder;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder encoder;
 
-    public ResponseEntity<?> registerUser(SignupRequest signUpRequest) {
-        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
+    public AuthService(UserRepository userRepository,
+                       RoleRepository roleRepository,
+                       PasswordEncoder encoder) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.encoder = encoder;
+    }
+
+    public User registerUserWithRoles(String username, String email, String rawPassword, Set<String> strRoles) {
+        if (userRepository.existsByUsername(username)) {
+            throw new RuntimeException("Error: Username is already taken!");
         }
 
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Error: Email is already in use!"));
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Error: Email is already in use!");
         }
 
-        User user = new User(
-                signUpRequest.getUsername(),
-                signUpRequest.getEmail(),
-                encoder.encode(signUpRequest.getPassword())
-        );
-
-        Set<Role> roles = getRoles(signUpRequest.getRole());
+        User user = new User(username, email, encoder.encode(rawPassword));
+        Set<Role> roles = getRoles(strRoles);
         user.setRoles(roles);
-        userRepository.save(user);
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        return userRepository.save(user);
     }
 
     private Set<Role> getRoles(Set<String> strRoles) {
         Set<Role> roles = new HashSet<>();
-        if (strRoles == null || strRoles.isEmpty()) {
+
+        if (strRoles == null) {
             Role userRole = roleRepository.findByName("USER")
-                    .orElseThrow(() -> new RuntimeException("Error: Role not found."));
+                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
             roles.add(userRole);
         } else {
-            for (String role : strRoles) {
+            strRoles.forEach(role -> {
                 switch (role.toLowerCase()) {
                     case "admin":
-                        roles.add(roleRepository.findByName("ADMIN")
-                                .orElseThrow(() -> new RuntimeException("Error: Role not found.")));
+                        Role adminRole = roleRepository.findByName("ADMIN")
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(adminRole);
                         break;
                     case "mod":
-                        roles.add(roleRepository.findByName("MODERATOR")
-                                .orElseThrow(() -> new RuntimeException("Error: Role not found.")));
+                        Role modRole = roleRepository.findByName("MODERATOR")
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(modRole);
                         break;
                     default:
-                        roles.add(roleRepository.findByName("USER")
-                                .orElseThrow(() -> new RuntimeException("Error: Role not found.")));
+                        Role userRole = roleRepository.findByName("USER")
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(userRole);
                 }
-            }
+            });
         }
+
         return roles;
     }
 }
+

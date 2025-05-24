@@ -22,10 +22,11 @@ public class Teacher {
     @JoinColumn(name = "user_id") // Optional, but good for clarity
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "organization_id")
-    private Organization organization;
+//    @ManyToOne
+//    @JoinColumn(name = "organization_id")
+//    private Organization organization;
 
+    private String organization;
     private String contactNumber;
     private String department;
     private String qualifications;
