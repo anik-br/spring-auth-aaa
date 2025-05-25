@@ -17,14 +17,14 @@ public class OrganizationController {
 
     private final OrganizationService organizationService;
 
-    @GetMapping
+    @GetMapping(("/all"))
    // @PreAuthorize("hasAuthority('READ_USER')")
     public ResponseEntity<List<OrganizationDTO>> getAll() {
         return ResponseEntity.ok(organizationService.getAllOrganizations());
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('CREATE_USER')")
+   @PreAuthorize("hasAuthority('CREATE_USER')")
     public ResponseEntity<OrganizationDTO> create(@RequestBody OrganizationDTO dto) {
         return ResponseEntity.ok(organizationService.createOrganization(dto));
     }

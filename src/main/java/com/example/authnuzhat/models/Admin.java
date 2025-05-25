@@ -23,6 +23,7 @@ public class Admin {
     @MapsId
     @JoinColumn(name = "user_id")
     private User user;
+    private String name;
 
     // Additional fields for an Admin (might be less specific, but still possible)
     private String adminRoleTitle; // e.g., "System Administrator", "Content Moderator"
