@@ -33,9 +33,22 @@ public class DataInitializer implements CommandLineRunner {
         createPrivilegeIfNotFound("UPDATE_USER");
         createPrivilegeIfNotFound("DELETE_USER");
         createPrivilegeIfNotFound("ADMIN_ACCESS");
+        createPrivilegeIfNotFound("CREATE_ADMIN_BY_SUPER_ADMIN_ONLY");
     }
 
     private void createRoles() {
+        Role superAdminRole= createRoleIfNotFound("SUPER_ADMIN");
+        superAdminRole.setPrivileges(Set.of(
+                findPrivilege("CREATE_USER"),
+                findPrivilege("READ_USER"),
+                findPrivilege("UPDATE_USER"),
+                findPrivilege("DELETE_USER"),
+                findPrivilege("ADMIN_ACCESS"),
+                findPrivilege("CREATE_ADMIN_BY_SUPER_ADMIN_ONLY")
+        ));
+
+        roleRepository.save(superAdminRole);
+
         Role adminRole = createRoleIfNotFound("ADMIN");
         adminRole.setPrivileges(Set.of(
                 findPrivilege("CREATE_USER"),

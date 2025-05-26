@@ -55,6 +55,12 @@ public class AuthService {
         } else {
             strRoles.forEach(role -> {
                 switch (role.toLowerCase()) {
+
+                    case "super_admin":
+                        Role superAdminRole = roleRepository.findByName("SUPER_ADMIN")
+                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                        roles.add(superAdminRole);
+                        break;
                     case "admin":
                         Role adminRole = roleRepository.findByName("ADMIN")
                                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));

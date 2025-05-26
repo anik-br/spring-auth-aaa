@@ -32,7 +32,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/signup/admin")
-    @PreAuthorize("hasAuthority('CREATE_USER_BY_SUPER_ADMIN_ONLY')")
+    @PreAuthorize("hasAuthority('CREATE_ADMIN_BY_SUPER_ADMIN_ONLY')")
     public ResponseEntity<?> registerAdmin(@Valid @RequestBody AdminRegistrationRequest signupRequest) {
         try {
             registrationService.registerAdmin(signupRequest);
