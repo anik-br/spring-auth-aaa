@@ -37,7 +37,7 @@ public class RegistrationService {
                 signupRequest.getUsername(),
                 signupRequest.getEmail(),
                 signupRequest.getPassword(),
-                Set.of("mod") // Maps to "ROLE_TEACHER"
+                Set.of("teacher") // Maps to "ROLE_TEACHER"
         );
 
         // Create and populate the Teacher entity

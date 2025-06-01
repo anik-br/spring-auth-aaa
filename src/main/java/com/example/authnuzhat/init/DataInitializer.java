@@ -27,6 +27,15 @@ public class DataInitializer implements CommandLineRunner {
         //createUsers();
     }
 
+//    private void createPrivileges() {
+//        createPrivilegeIfNotFound("CREATE_USER");
+//        createPrivilegeIfNotFound("READ_USER");
+//        createPrivilegeIfNotFound("UPDATE_USER");
+//        createPrivilegeIfNotFound("DELETE_USER");
+//        createPrivilegeIfNotFound("ADMIN_ACCESS");
+//        createPrivilegeIfNotFound("CREATE_ADMIN_BY_SUPER_ADMIN_ONLY");
+//    }
+
     private void createPrivileges() {
         createPrivilegeIfNotFound("CREATE_USER");
         createPrivilegeIfNotFound("READ_USER");
@@ -34,6 +43,13 @@ public class DataInitializer implements CommandLineRunner {
         createPrivilegeIfNotFound("DELETE_USER");
         createPrivilegeIfNotFound("ADMIN_ACCESS");
         createPrivilegeIfNotFound("CREATE_ADMIN_BY_SUPER_ADMIN_ONLY");
+        createPrivilegeIfNotFound("TEACHER_ACCESS");
+        createPrivilegeIfNotFound("SUPER_ADMIN_ACCESS");
+        createPrivilegeIfNotFound("TEACHER_CREATE_QUESTION");
+        createPrivilegeIfNotFound("TEACHER_READ_QUESTION");
+        createPrivilegeIfNotFound("TEACHER_UPDATE_QUESTION");
+        createPrivilegeIfNotFound("TEACHER_DELETE_QUESTION");
+        createPrivilegeIfNotFound("TEACHER_ACCESS");
     }
 
     private void createRoles() {
@@ -44,10 +60,22 @@ public class DataInitializer implements CommandLineRunner {
                 findPrivilege("UPDATE_USER"),
                 findPrivilege("DELETE_USER"),
                 findPrivilege("ADMIN_ACCESS"),
+                findPrivilege("TEACHER_ACCESS"),
                 findPrivilege("CREATE_ADMIN_BY_SUPER_ADMIN_ONLY")
         ));
 
         roleRepository.save(superAdminRole);
+
+        Role teacherRole = createRoleIfNotFound("TEACHER");
+        teacherRole.setPrivileges(Set.of(
+                findPrivilege("TEACHER_CREATE_QUESTION"),
+                findPrivilege("TEACHER_READ_QUESTION"),
+                findPrivilege("TEACHER_UPDATE_QUESTION"),
+                findPrivilege("TEACHER_DELETE_QUESTION"),
+                findPrivilege("TEACHER_ACCESS")
+
+        ));
+        roleRepository.save(teacherRole);
 
         Role adminRole = createRoleIfNotFound("ADMIN");
         adminRole.setPrivileges(Set.of(
