@@ -2,11 +2,14 @@ package com.example.authnuzhat.init;
 
 import com.example.authnuzhat.models.Privilege;
 import com.example.authnuzhat.models.Role;
+import com.example.authnuzhat.models.User;
 import com.example.authnuzhat.repository.PrivilegeRepository;
 import com.example.authnuzhat.repository.RoleRepository;
+import com.example.authnuzhat.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -19,11 +22,15 @@ public class DataInitializer implements CommandLineRunner {
 
     private final PrivilegeRepository privilegeRepository;
     private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
 
     @Override
-    public void run(String... args) {
+    public void run(String... args){
         createPrivileges();
         createRoles();
+        createSuperAdminUser();
         //createUsers();
     }
 
@@ -50,6 +57,8 @@ public class DataInitializer implements CommandLineRunner {
         createPrivilegeIfNotFound("TEACHER_UPDATE_QUESTION");
         createPrivilegeIfNotFound("TEACHER_DELETE_QUESTION");
         createPrivilegeIfNotFound("TEACHER_ACCESS");
+        createPrivilegeIfNotFound("SUPER_ADMIN_ACCESS");
+        createPrivilegeIfNotFound("SETUP_PERMISSION");
     }
 
     private void createRoles() {
@@ -61,7 +70,8 @@ public class DataInitializer implements CommandLineRunner {
                 findPrivilege("DELETE_USER"),
                 findPrivilege("ADMIN_ACCESS"),
                 findPrivilege("TEACHER_ACCESS"),
-                findPrivilege("CREATE_ADMIN_BY_SUPER_ADMIN_ONLY")
+                findPrivilege("CREATE_ADMIN_BY_SUPER_ADMIN_ONLY"),
+                findPrivilege("SUPER_ADMIN_ACCESS")
         ));
 
         roleRepository.save(superAdminRole);
@@ -83,7 +93,8 @@ public class DataInitializer implements CommandLineRunner {
                 findPrivilege("READ_USER"),
                 findPrivilege("UPDATE_USER"),
                 findPrivilege("DELETE_USER"),
-                findPrivilege("ADMIN_ACCESS")
+                findPrivilege("ADMIN_ACCESS"),
+                findPrivilege("SETUP_PERMISSION")
         ));
         roleRepository.save(adminRole);
 
@@ -96,6 +107,32 @@ public class DataInitializer implements CommandLineRunner {
         roleRepository.save(userModerator);
 
     }
+
+    private void createSuperAdminUser() {
+        String superAdminUsername = "superadmin";
+        String superAdminEmail = "superadmin@example.com";
+
+        Optional<User> existingUser = userRepository.findByUsername(superAdminUsername);
+
+        if (existingUser.isPresent()) {
+            log.info("Super admin already exists: {}", superAdminUsername);
+            return;
+        }
+
+        User superAdmin = new User();
+        superAdmin.setUsername(superAdminUsername);
+        superAdmin.setEmail(superAdminEmail);
+        superAdmin.setPassword(passwordEncoder.encode("superadmin123")); // Default password, change it later
+
+        Role superAdminRole = roleRepository.findByName("SUPER_ADMIN").orElseThrow(() ->
+                new RuntimeException("SUPER_ADMIN role not found"));
+
+        superAdmin.setRoles(Set.of(superAdminRole));
+
+        userRepository.save(superAdmin);
+        log.info("Created default super admin user: {}", superAdminUsername);
+    }
+
 
 
 
