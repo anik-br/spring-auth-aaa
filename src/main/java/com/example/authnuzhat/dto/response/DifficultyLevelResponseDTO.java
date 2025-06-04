@@ -1,0 +1,14 @@
+package com.example.authnuzhat.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class DifficultyLevelResponseDTO {
+
+    private Long id;
+    private String level;
+}

@@ -2,6 +2,7 @@ package com.example.authnuzhat.services.classLevel;
 
 import com.example.authnuzhat.dto.request.ClassLevelRequestDTO;
 import com.example.authnuzhat.dto.response.ClassLevelResponseDTO;
+import com.example.authnuzhat.exception.ResourceNotFoundException;
 import com.example.authnuzhat.models.ClassLevel;
 import com.example.authnuzhat.repository.ClassLevelRepository;
 import lombok.RequiredArgsConstructor;
