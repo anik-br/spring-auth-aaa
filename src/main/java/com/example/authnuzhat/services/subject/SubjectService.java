@@ -1,6 +1,7 @@
 package com.example.authnuzhat.services.subject;
 
 import com.example.authnuzhat.dto.request.SubjectRequestDTO;
+import com.example.authnuzhat.dto.response.ChildSubjectDTO;
 import com.example.authnuzhat.dto.response.SubjectResponseDTO;
 import com.example.authnuzhat.exception.ConflictException;
 import com.example.authnuzhat.exception.ResourceNotFoundException;
@@ -131,9 +132,17 @@ public class SubjectService implements ISubjectService{
             dto.setParentName(subject.getParent().getName());
         }
 
+        // Optional: keep IDs
         dto.setChildrenIds(
                 subject.getChildren().stream()
                         .map(Subject::getId)
+                        .collect(Collectors.toList())
+        );
+
+        // New: map to child DTOs
+        dto.setChildren(
+                subject.getChildren().stream()
+                        .map(child -> new ChildSubjectDTO(child.getId(), child.getName()))
                         .collect(Collectors.toList())
         );
 

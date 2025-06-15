@@ -12,7 +12,9 @@ import java.util.List;
 public class SubjectResponseDTO {
     private Long id;
     private String name;
-    private Long parentId;              // existing
-    private String parentName;          // ✅ newly added
-    private List<Long> childrenIds;     // existing
+    private Long parentId;
+    private String parentName;
+
+    private List<Long> childrenIds;                 // Optional: keep if needed
+    private List<ChildSubjectDTO> children;         // ✅ New field for ID + name
 }
