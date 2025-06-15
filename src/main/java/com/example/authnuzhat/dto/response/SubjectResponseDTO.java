@@ -12,6 +12,7 @@ import java.util.List;
 public class SubjectResponseDTO {
     private Long id;
     private String name;
-    private Long parentId; // ID of the parent subject
-    private List<Long> childrenIds; // IDs of child subjects
+    private Long parentId;              // existing
+    private String parentName;          // ✅ newly added
+    private List<Long> childrenIds;     // existing
 }

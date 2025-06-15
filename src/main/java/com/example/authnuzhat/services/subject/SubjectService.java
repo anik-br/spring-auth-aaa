@@ -122,13 +122,21 @@ public class SubjectService implements ISubjectService{
 
     // Helper method to map Entity to DTO
     private SubjectResponseDTO mapToResponseDTO(Subject subject) {
-        return new SubjectResponseDTO(
-                subject.getId(),
-                subject.getName(),
-                subject.getParent() != null ? subject.getParent().getId() : null,
+        SubjectResponseDTO dto = new SubjectResponseDTO();
+        dto.setId(subject.getId());
+        dto.setName(subject.getName());
+
+        if (subject.getParent() != null) {
+            dto.setParentId(subject.getParent().getId());
+            dto.setParentName(subject.getParent().getName());
+        }
+
+        dto.setChildrenIds(
                 subject.getChildren().stream()
                         .map(Subject::getId)
                         .collect(Collectors.toList())
         );
+
+        return dto;
     }
 }

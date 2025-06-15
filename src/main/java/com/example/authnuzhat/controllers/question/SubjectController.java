@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,13 +21,15 @@ public class SubjectController {
 
     // create a new Subject
     @PostMapping("/subject")
+    @PreAuthorize("hasAuthority('SETUP_PERMISSION')")
     public ResponseEntity<SubjectResponseDTO> createSubject(@Valid @RequestBody SubjectRequestDTO subjectRequestDTO) {
         SubjectResponseDTO responseDTO = subjectService.createSubject(subjectRequestDTO);
         return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
 
     // Get all Subjects
-    @GetMapping("/all")
+    @GetMapping("/ui/all")
+    //@PreAuthorize("hasAuthority('SETUP_PERMISSION')")
     public ResponseEntity<List<SubjectResponseDTO>> getAllSubjects() {
         List<SubjectResponseDTO> responseDTOs = subjectService.getAllSubjects();
         return new ResponseEntity<>(responseDTOs, HttpStatus.OK);
@@ -34,6 +37,7 @@ public class SubjectController {
 
     // Get a Subject by ID
     @GetMapping("/subject/{id}")
+    @PreAuthorize("hasAuthority('SETUP_PERMISSION')")
     public ResponseEntity<SubjectResponseDTO> getSubjectById(@PathVariable Long id) {
         SubjectResponseDTO responseDTO = subjectService.getSubjectById(id);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
@@ -41,6 +45,7 @@ public class SubjectController {
 
     // Update a Subject
     @PutMapping("/update/{id}")
+    @PreAuthorize("hasAuthority('SETUP_PERMISSION')")
     public ResponseEntity<SubjectResponseDTO> updateSubject(
             @PathVariable Long id,
             @Valid @RequestBody SubjectRequestDTO subjectRequestDTO) {
@@ -50,12 +55,14 @@ public class SubjectController {
 
     // Delete a Subject
     @DeleteMapping("/subject/{id}")
+    @PreAuthorize("hasAuthority('SETUP_PERMISSION')")
     public ResponseEntity<Void> deleteSubject(@PathVariable Long id) {
         subjectService.deleteSubject(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
     // Get all root subjects (subjects with no parent)
     @GetMapping("/roots")
+    @PreAuthorize("hasAuthority('SETUP_PERMISSION')")
     public ResponseEntity<List<SubjectResponseDTO>> getAllRootSubjects() {
         List<SubjectResponseDTO> responseDTOs = subjectService.getAllRootSubjects();
         return new ResponseEntity<>(responseDTOs, HttpStatus.OK);

@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -78,8 +79,8 @@ public class WebSecurityConfig {
                                         "/v3/api-docs/**",
                                         "/v3/api-docs",
                                         "/api/organizations/all",
-                                        "/api/v1/ui/**",
                                         "/v3/swagger.json").permitAll()
+                                .requestMatchers(new RegexRequestMatcher("^/api/v1/.*/ui/.*$", null)).permitAll()
                                 .anyRequest().authenticated()
                 );
 
