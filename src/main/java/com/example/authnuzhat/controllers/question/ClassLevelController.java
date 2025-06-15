@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,13 +20,15 @@ public class ClassLevelController {
 
     // Create a new ClassLevel
     @PostMapping("/class-level")
+    @PreAuthorize("hasAuthority('SETUP_PERMISSION')")
     public ResponseEntity<ClassLevelResponseDTO> createClassLevel(@Valid @RequestBody ClassLevelRequestDTO classLevelRequestDTO) {
         ClassLevelResponseDTO responseDTO = classLevelService.createClassLevel(classLevelRequestDTO);
         return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
     }
 
     // Get all ClassLevels
-    @GetMapping("/all")
+    @GetMapping("/ui/all")
+    //@PreAuthorize("hasAuthority('SETUP_PERMISSION')")
     public ResponseEntity<List<ClassLevelResponseDTO>> getAllClassLevels() {
         List<ClassLevelResponseDTO> responseDTOs = classLevelService.getAllClassLevels();
         return new ResponseEntity<>(responseDTOs, HttpStatus.OK);
@@ -33,6 +36,7 @@ public class ClassLevelController {
 
     // Get a ClassLevel by ID
     @GetMapping("/class-level/{id}")
+    @PreAuthorize("hasAuthority('SETUP_PERMISSION')")
     public ResponseEntity<ClassLevelResponseDTO> getClassLevelById(@PathVariable Long id) {
         ClassLevelResponseDTO responseDTO = classLevelService.getClassLevelById(id);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
@@ -40,6 +44,7 @@ public class ClassLevelController {
 
     // Update a ClassLevel
     @PutMapping("/class-level/{id}")
+    @PreAuthorize("hasAuthority('SETUP_PERMISSION')")
     public ResponseEntity<ClassLevelResponseDTO> updateClassLevel(
             @PathVariable Long id,
             @Valid @RequestBody ClassLevelRequestDTO classLevelRequestDTO) {
@@ -48,7 +53,8 @@ public class ClassLevelController {
     }
 
     // Delete a ClassLevel
-    @DeleteMapping("/class-level/{id}")
+    @DeleteMapping( "/class-level/{id}")
+    @PreAuthorize("hasAuthority('SETUP_PERMISSION')")
     public ResponseEntity<Void> deleteClassLevel(@PathVariable Long id) {
         classLevelService.deleteClassLevel(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
