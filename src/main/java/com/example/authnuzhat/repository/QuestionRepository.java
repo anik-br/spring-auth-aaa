@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 // here giving repository tag is optional, no issue if we don't give
-@Repository
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     // Find all questions by subject ID
     List<Question> findBySubjectId(Long subjectId);

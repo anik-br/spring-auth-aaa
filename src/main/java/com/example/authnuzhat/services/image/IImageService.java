@@ -6,6 +6,7 @@ import com.example.authnuzhat.dto.response.ImageResponseDTO;
 import java.io.IOException;
 import java.util.List;
 
+
 public interface IImageService {
 
     ImageResponseDTO createImage(ImageRequestDTO imageRequestDTO) throws IOException;

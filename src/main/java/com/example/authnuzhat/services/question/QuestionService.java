@@ -1,5 +1,6 @@
 package com.example.authnuzhat.services.question;
 
+import com.example.authnuzhat.dto.request.AnswerRequestDTO;
 import com.example.authnuzhat.dto.request.ImageRequestDTO;
 import com.example.authnuzhat.dto.request.McqOptionRequestDTO;
 import com.example.authnuzhat.dto.request.QuestionRequestDTO;
@@ -13,10 +14,12 @@ import com.example.authnuzhat.repository.*;
 import com.example.authnuzhat.services.image.IImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,7 +37,7 @@ public class QuestionService implements IQuestionService{
 
 
     @Override
-    public QuestionResponseDTO createQuestion(QuestionRequestDTO questionRequestDTO) {
+    public QuestionResponseDTO createQuestion(QuestionRequestDTO questionRequestDTO, MultipartFile[] images, MultipartFile[] optionImages) throws IOException {
         // Fetch related entities or throw exceptions if not found
         QuestionType questionType = questionTypeRepository.findById(questionRequestDTO.getQuestionTypeId())
                 .orElseThrow(() -> new ResourceNotFoundException("QuestionType not found with id: " + questionRequestDTO.getQuestionTypeId()));
@@ -47,6 +50,7 @@ public class QuestionService implements IQuestionService{
 
         ClassLevel classLevel = classLevelRepository.findById(questionRequestDTO.getClassLevelId())
                 .orElseThrow(() -> new ResourceNotFoundException("ClassLevel not found with id: " + questionRequestDTO.getClassLevelId()));
+
 
 
         // Map DTO to Entity
@@ -73,54 +77,77 @@ public class QuestionService implements IQuestionService{
 //            }
 //        }
 
+        //  Map option image files using original filename
+
+        Map<String, MultipartFile> optionImageMap = new HashMap<>();
+        if (optionImages != null) {
+            for (MultipartFile image : optionImages) {
+                // key = original filename
+                optionImageMap.put(image.getOriginalFilename(), image);
+            }
+        }
+
         // Save MCQ options (if any)
         List<McqOptions> savedMcqOptions = new ArrayList<>();
         if (questionRequestDTO.getMcqOptions() != null) {
+
             for (McqOptionRequestDTO mcqOptionRequestDTO : questionRequestDTO.getMcqOptions()) {
-                McqOptions mcqOption = getMcqOptions(mcqOptionRequestDTO, savedQuestion);
+                String imageUrl = null;
+
+                // If the option has an imageKey, try to find matching image and upload it
+                if (mcqOptionRequestDTO.getImageKey() != null && optionImageMap.containsKey(mcqOptionRequestDTO.getImageKey())) {
+                    MultipartFile imageFile = optionImageMap.get(mcqOptionRequestDTO.getImageKey());
+
+                    // Use your ImageService to save and get the image URL
+                    ImageRequestDTO imageRequestDTO = new ImageRequestDTO();
+                    imageRequestDTO.setQuestionId(savedQuestion.getId()); // optional, if image service needs it
+                    imageRequestDTO.setFile(imageFile);
+
+                    imageUrl = imageService.createImage(imageRequestDTO).getUrl();
+                }
+
+                McqOptions mcqOption = getMcqOptions(mcqOptionRequestDTO, savedQuestion, imageUrl);
                 McqOptions savedMcqOption = mcqOptionsRepository.save(mcqOption);
                 savedMcqOptions.add(savedMcqOption);
             }
         }
 
         // Save Answer (if any)
-        // Save Answer (if any)
-        if (questionRequestDTO.getAnswer() != null) {
+
+        if (questionType.getName().equalsIgnoreCase("MCQ")) {
             Answer answer = new Answer();
-            answer.setCorrectText(questionRequestDTO.getAnswer().getCorrectText());
-            answer.setCorrectBoolean(questionRequestDTO.getAnswer().getCorrectBoolean());
-            answer.setNumericalValue(questionRequestDTO.getAnswer().getNumericalValue());
-            answer.setNumericalTolerance(questionRequestDTO.getAnswer().getNumericalTolerance());
-            answer.setScore(questionRequestDTO.getAnswer().getScore());
-            answer.setAllowPartialScoring(questionRequestDTO.getAnswer().getAllowPartialScoring());
-            answer.setNegativeScore(questionRequestDTO.getAnswer().getNegativeScore());
-            answer.setQuestion(savedQuestion);
-
-
-
-            // For MCQ questions, link correct options from savedMcqOptions
-            if (questionType.getName().equalsIgnoreCase("MCQ")) {
-                for (McqOptions mcqOption : savedMcqOptions) {
-                    if (mcqOption.isCorrect()) {
-                        answer.getCorrectOptions().add(mcqOption);
-                    }
+            for (McqOptions mcqOption : savedMcqOptions) {
+                if (mcqOption.isCorrect()) {
+                    answer.getCorrectOptions().add(mcqOption);
                 }
             }
+            answer.setQuestion(savedQuestion); // Important to set the relationship
+            answerRepository.save(answer);
+        }
+        else if (questionRequestDTO.getAnswer() != null) {
+            Answer answer = new Answer();
+            AnswerRequestDTO answerDTO = questionRequestDTO.getAnswer();
+
+            answer.setCorrectText(answerDTO.getCorrectText());
+            answer.setCorrectBoolean(answerDTO.getCorrectBoolean());
+            answer.setNumericalValue(answerDTO.getNumericalValue());
+            answer.setNumericalTolerance(answerDTO.getNumericalTolerance());
+            answer.setScore(answerDTO.getScore());
+            answer.setAllowPartialScoring(answerDTO.getAllowPartialScoring());
+            answer.setNegativeScore(answerDTO.getNegativeScore());
+            answer.setQuestion(savedQuestion);
 
             answerRepository.save(answer);
         }
 
 
-        // Save Images (if any) using IImageService
-        if (questionRequestDTO.getImages() != null) {
-            for (ImageRequestDTO imageRequestDTO : questionRequestDTO.getImages()) {
-                imageRequestDTO.setQuestionId(savedQuestion.getId()); // Set the question ID
-                try {
-                    imageService.createImage(imageRequestDTO); // Use IImageService to create the image
-                } catch (IOException e) {
-                    // Handle IOException (e.g., log it or rethrow it as a runtime exception)
-                    throw new RuntimeException("Error while saving image", e);
-                }
+        // Save Images using ImageService
+        if (images != null) {
+            for (MultipartFile image : images) {
+                ImageRequestDTO imageRequestDTO = new ImageRequestDTO();
+                imageRequestDTO.setQuestionId(savedQuestion.getId());
+                imageRequestDTO.setFile(image);
+                imageService.createImage(imageRequestDTO); // Image service handles the upload
             }
         }
         // Map Entity to DTO
@@ -128,14 +155,18 @@ public class QuestionService implements IQuestionService{
     }
 
 
-    private McqOptions getMcqOptions(McqOptionRequestDTO mcqOptionRequestDTO, Question savedQuestion) {
+    private McqOptions getMcqOptions(McqOptionRequestDTO mcqOptionRequestDTO, Question savedQuestion, String imageUrl) {
         McqOptions mcqOption = new McqOptions();
         mcqOption.setOptionText(mcqOptionRequestDTO.getOptionText());
         mcqOption.setCorrect(mcqOptionRequestDTO.isCorrect());
         mcqOption.setSortOrder(mcqOptionRequestDTO.getSortOrder());
-        if (mcqOptionRequestDTO.getImageUrl()!=null){
+
+        if (imageUrl != null) {
+            mcqOption.setImageUrl(imageUrl);
+        } else if (mcqOptionRequestDTO.getImageUrl() != null) {
             mcqOption.setImageUrl(mcqOptionRequestDTO.getImageUrl());
         }
+
         mcqOption.setQuestion(savedQuestion);
         return mcqOption;
     }
@@ -161,38 +192,152 @@ public class QuestionService implements IQuestionService{
         return mapToResponseDTO(question);
     }
 
+    // Updating a Question
+    @Transactional
     @Override
-    public QuestionResponseDTO updateQuestion(Long id, QuestionRequestDTO questionRequestDTO) {
-        // Fetch Question by ID or throw an exception if not found
-        Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + id));
+    public QuestionResponseDTO updateQuestion(Long questionId, QuestionRequestDTO questionRequestDTO, MultipartFile[] images, MultipartFile[] optionImages) throws IOException {
+        // Fetch existing question
+        Question existingQuestion = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + questionId));
 
-        // Update fields
-        question.setQuestionText(questionRequestDTO.getQuestionText());
-        question.setImportance(questionRequestDTO.getImportance());
-        question.setScore(questionRequestDTO.getScore());
-        question.setModifiedBy(questionRequestDTO.getModifiedBy());
-        question.setActive(questionRequestDTO.isActive());
-        question.setExplanation(questionRequestDTO.getExplanation());
+        // Fetch related entities
+        QuestionType questionType = questionTypeRepository.findById(questionRequestDTO.getQuestionTypeId())
+                .orElseThrow(() -> new ResourceNotFoundException("QuestionType not found with id: " + questionRequestDTO.getQuestionTypeId()));
+        DifficultyLevel difficultyLevel = difficultyLevelRepository.findById(questionRequestDTO.getDifficultyLevelId())
+                .orElseThrow(() -> new ResourceNotFoundException("DifficultyLevel not found with id: " + questionRequestDTO.getDifficultyLevelId()));
+        Subject subject = subjectRepository.findById(questionRequestDTO.getSubjectId())
+                .orElseThrow(() -> new ResourceNotFoundException("Subject not found with id: " + questionRequestDTO.getSubjectId()));
+        ClassLevel classLevel = classLevelRepository.findById(questionRequestDTO.getClassLevelId())
+                .orElseThrow(() -> new ResourceNotFoundException("ClassLevel not found with id: " + questionRequestDTO.getClassLevelId()));
 
-        // Save updated entity
-        Question updatedQuestion = questionRepository.save(question);
+        // Update question fields
+        existingQuestion.setQuestionText(questionRequestDTO.getQuestionText());
+        existingQuestion.setQuestionType(questionType);
+        existingQuestion.setDifficultyLevel(difficultyLevel);
+        existingQuestion.setSubject(subject);
+        existingQuestion.setClassLevel(classLevel);
+        existingQuestion.setImportance(questionRequestDTO.getImportance());
+        existingQuestion.setScore(questionRequestDTO.getScore());
+        existingQuestion.setModifiedBy(questionRequestDTO.getModifiedBy());
+        existingQuestion.setActive(questionRequestDTO.isActive());
+        existingQuestion.setExplanation(questionRequestDTO.getExplanation());
 
-        // Map Entity to DTO
+        Question updatedQuestion = questionRepository.save(existingQuestion);
+
+
+
+        // Delete existing MCQ options and their images (if necessary)
+        List<McqOptions> existingMcqOptions = mcqOptionsRepository.findByQuestionId(questionId);
+        existingMcqOptions.forEach(option -> {
+            if (option.getImageUrl() != null) {
+                imageService.deleteImageByUrl(option.getImageUrl());
+            }
+        });
+
+        // Clear old Answer correctOptions
+        Optional<Answer> existingAnswerMcqOpt = answerRepository.findByQuestionId(questionId);
+        existingAnswerMcqOpt.ifPresent(answer -> {
+            answer.getCorrectOptions().clear();
+            answerRepository.saveAndFlush(answer);  // IMPORTANT
+        });
+
+        // 2. Clear old MCQ options
+        updatedQuestion.getMcqOptions().clear();
+        questionRepository.saveAndFlush(updatedQuestion);  // IMPORTANT
+
+
+
+        // Process new MCQ options
+        List<McqOptions> savedMcqOptions = new ArrayList<>();
+        Map<String, MultipartFile> optionImageMap = new HashMap<>();
+        if (optionImages != null) {
+            Arrays.stream(optionImages).forEach(image ->
+                    optionImageMap.put(image.getOriginalFilename(), image));
+        }
+
+        if (questionRequestDTO.getMcqOptions() != null) {
+            for (McqOptionRequestDTO mcqOptionDTO : questionRequestDTO.getMcqOptions()) {
+                String imageUrl = null;
+                if (mcqOptionDTO.getImageKey() != null && optionImageMap.containsKey(mcqOptionDTO.getImageKey())) {
+                    MultipartFile imageFile = optionImageMap.get(mcqOptionDTO.getImageKey());
+                    ImageRequestDTO imageReqDTO = new ImageRequestDTO();
+                    imageReqDTO.setQuestionId(questionId);
+                    imageReqDTO.setFile(imageFile);
+                    imageUrl = imageService.createImage(imageReqDTO).getUrl();
+                }
+                McqOptions mcqOption = new McqOptions();
+                mcqOption.setOptionText(mcqOptionDTO.getOptionText());
+                mcqOption.setCorrect(mcqOptionDTO.isCorrect());
+                mcqOption.setSortOrder(mcqOptionDTO.getSortOrder());
+                mcqOption.setImageUrl(imageUrl != null ? imageUrl : mcqOptionDTO.getImageUrl());
+                mcqOption.setQuestion(updatedQuestion);
+                savedMcqOptions.add(mcqOptionsRepository.save(mcqOption));
+            }
+        }
+
+        // Update or create Answer
+        Optional<Answer> existingAnswerOpt = answerRepository.findByQuestionId(questionId);
+        Answer answer = existingAnswerOpt.orElse(new Answer());
+
+        if (questionType.getName().equalsIgnoreCase("MCQ")) {
+            answer.getCorrectOptions().clear();
+            savedMcqOptions.stream()
+                    .filter(McqOptions::isCorrect)
+                    .forEach(answer.getCorrectOptions()::add);
+        } else if (questionRequestDTO.getAnswer() != null) {
+            AnswerRequestDTO answerDTO = questionRequestDTO.getAnswer();
+            answer.setCorrectText(answerDTO.getCorrectText());
+            answer.setCorrectBoolean(answerDTO.getCorrectBoolean());
+            answer.setNumericalValue(answerDTO.getNumericalValue());
+            answer.setNumericalTolerance(answerDTO.getNumericalTolerance());
+            answer.setScore(answerDTO.getScore());
+            answer.setAllowPartialScoring(answerDTO.getAllowPartialScoring());
+            answer.setNegativeScore(answerDTO.getNegativeScore());
+        }
+
+        answer.setQuestion(updatedQuestion);
+        answerRepository.save(answer);
+
+        // Delete existing images for the question and update new ones from the request
+        // If new images are provided, delete existing ones and upload the new ones
+
+        if (images != null && Arrays.stream(images).anyMatch(image -> !image.isEmpty())) {
+            imageService.deleteByQuestionId(questionId);
+            for (MultipartFile image : images) {
+                if (!image.isEmpty()) {
+                    ImageRequestDTO imageReqDTO = new ImageRequestDTO();
+                    imageReqDTO.setQuestionId(questionId);
+                    imageReqDTO.setFile(image);
+                    imageService.createImage(imageReqDTO);
+                }
+            }
+        }
+
+
         return mapToResponseDTO(updatedQuestion);
     }
 
+    // Delete a Question and associative everythings
     @Override
     public void deleteQuestion(Long id) {
-        // Check if Question exists
-        if (!questionRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Question not found with id: " + id);
+        // Check if the question exists
+        Question question = questionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + id));
+
+        // Delete question-level images (DB + storage)
+        imageService.deleteByQuestionId(id);
+
+        // Delete MCQ option images (only file storage, as DB is auto-handled via cascade)
+        for (McqOptions option : question.getMcqOptions()) {
+            if (option.getImageUrl() != null) {
+                imageService.deleteImageByUrl(option.getImageUrl());
+            }
         }
 
-        // Delete Question
+        // Delete the question (cascades to MCQ options, answer, and images in DB)
         questionRepository.deleteById(id);
-
     }
+
 
     @Override
     public List<QuestionResponseDTO> getQuestionsBySubjectId(Long subjectId) {
