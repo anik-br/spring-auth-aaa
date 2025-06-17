@@ -71,7 +71,8 @@ public class DataInitializer implements CommandLineRunner {
                 findPrivilege("ADMIN_ACCESS"),
                 findPrivilege("TEACHER_ACCESS"),
                 findPrivilege("CREATE_ADMIN_BY_SUPER_ADMIN_ONLY"),
-                findPrivilege("SUPER_ADMIN_ACCESS")
+                findPrivilege("SUPER_ADMIN_ACCESS"),
+                findPrivilege("SETUP_PERMISSION")
         ));
 
         roleRepository.save(superAdminRole);

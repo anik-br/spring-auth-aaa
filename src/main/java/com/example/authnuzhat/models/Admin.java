@@ -10,7 +10,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-
 @Entity
 @Data
 @NoArgsConstructor
@@ -38,3 +37,4 @@ public class Admin {
     private LocalDateTime updatedAt;
     private String notes;
 }
+
