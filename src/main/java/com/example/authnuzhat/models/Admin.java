@@ -18,7 +18,7 @@ public class Admin {
     @Id
     private Long id;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true) // orphanRemoval is good practice for OneToOne
     @MapsId
     @JoinColumn(name = "user_id")
     private User user;

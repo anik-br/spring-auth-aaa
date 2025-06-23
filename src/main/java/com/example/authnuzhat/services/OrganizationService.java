@@ -29,6 +29,21 @@ public class OrganizationService {
         return mapToDTO(saved);
     }
 
+    public OrganizationDTO updateOrganization(Long id, OrganizationDTO dto) {
+        return organizationRepository.findById(id)
+                .map(org -> {
+                    org.setName(dto.getName());
+                    org.setType(dto.getType());
+                    Organization updated = organizationRepository.save(org);
+                    return mapToDTO(updated);
+                })
+                .orElseThrow(() -> new RuntimeException("Organization not found with id: " + id));
+    }
+
+    public void deleteOrganization(Long id) {
+        organizationRepository.deleteById(id);
+    }
+
     private OrganizationDTO mapToDTO(Organization org) {
         OrganizationDTO dto = new OrganizationDTO();
         dto.setId(org.getId());
@@ -36,5 +51,4 @@ public class OrganizationService {
         dto.setType(org.getType());
         return dto;
     }
-
 }
