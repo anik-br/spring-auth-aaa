@@ -1,9 +1,6 @@
 package com.example.authnuzhat.services.question;
 
-import com.example.authnuzhat.dto.request.AnswerRequestDTO;
-import com.example.authnuzhat.dto.request.ImageRequestDTO;
-import com.example.authnuzhat.dto.request.McqOptionRequestDTO;
-import com.example.authnuzhat.dto.request.QuestionRequestDTO;
+import com.example.authnuzhat.dto.request.*;
 import com.example.authnuzhat.dto.response.AnswerResponseDTO;
 import com.example.authnuzhat.dto.response.ImageResponseDTO;
 import com.example.authnuzhat.dto.response.McqOptionResponseDTO;
@@ -152,6 +149,20 @@ public class QuestionService implements IQuestionService{
         }
         // Map Entity to DTO
         return mapToResponseDTO(savedQuestion);
+    }
+
+    @Override
+    public List<QuestionSummaryDTO> getAllForExamPaper() {
+        List<Question> questions = questionRepository.findAll();
+
+        return questions.stream().map(q -> {
+            QuestionSummaryDTO dto = new QuestionSummaryDTO();
+            dto.setId(q.getId());
+            dto.setQuestionText(q.getQuestionText());
+            dto.setQuestionType(q.getQuestionType().getName());
+            dto.setSubject(q.getSubject().getName());
+            return dto;
+        }).collect(Collectors.toList());
     }
 
 

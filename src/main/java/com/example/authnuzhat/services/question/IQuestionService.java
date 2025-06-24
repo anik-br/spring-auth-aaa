@@ -1,6 +1,7 @@
 package com.example.authnuzhat.services.question;
 
 import com.example.authnuzhat.dto.request.QuestionRequestDTO;
+import com.example.authnuzhat.dto.request.QuestionSummaryDTO;
 import com.example.authnuzhat.dto.response.QuestionResponseDTO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,4 +38,6 @@ public interface IQuestionService {
 
     // Get all active Questions
     List<QuestionResponseDTO> getActiveQuestions();
+
+    List<QuestionSummaryDTO> getAllForExamPaper();
 }

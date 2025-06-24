@@ -60,6 +60,7 @@ public class DataInitializer implements CommandLineRunner {
         createPrivilegeIfNotFound("SUPER_ADMIN_ACCESS");
         createPrivilegeIfNotFound("SETUP_PERMISSION");
         createPrivilegeIfNotFound("CREATE_QUESTION");
+        createPrivilegeIfNotFound("CREATE_EXAM_PAPER");
     }
 
     private void createRoles() {
@@ -74,7 +75,8 @@ public class DataInitializer implements CommandLineRunner {
                 findPrivilege("CREATE_ADMIN_BY_SUPER_ADMIN_ONLY"),
                 findPrivilege("SUPER_ADMIN_ACCESS"),
                 findPrivilege("SETUP_PERMISSION"),
-                findPrivilege("CREATE_QUESTION")
+                findPrivilege("CREATE_QUESTION"),
+                findPrivilege("CREATE_EXAM_PAPER")
         ));
 
         roleRepository.save(superAdminRole);
@@ -86,7 +88,8 @@ public class DataInitializer implements CommandLineRunner {
                 findPrivilege("TEACHER_UPDATE_QUESTION"),
                 findPrivilege("TEACHER_DELETE_QUESTION"),
                 findPrivilege("TEACHER_ACCESS"),
-                findPrivilege("CREATE_QUESTION")
+                findPrivilege("CREATE_QUESTION"),
+                findPrivilege("CREATE_EXAM_PAPER")
 
         ));
         roleRepository.save(teacherRole);

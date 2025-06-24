@@ -2,6 +2,7 @@ package com.example.authnuzhat.controllers.question;
 
 
 import com.example.authnuzhat.dto.request.QuestionRequestDTO;
+import com.example.authnuzhat.dto.request.QuestionSummaryDTO;
 import com.example.authnuzhat.dto.response.QuestionResponseDTO;
 import com.example.authnuzhat.exception.ResourceNotFoundException;
 import com.example.authnuzhat.services.question.QuestionService;
@@ -123,4 +124,11 @@ public class QuestionController {
         List<QuestionResponseDTO> responseDTOs = questionService.getActiveQuestions();
         return new ResponseEntity<>(responseDTOs, HttpStatus.OK);
     }
+
+    @GetMapping("/for-exam-paper")
+    @PreAuthorize("hasAuthority('CREATE_EXAM_PAPER')")
+    public ResponseEntity<List<QuestionSummaryDTO>> getAllForExamPaper() {
+        return ResponseEntity.ok(questionService.getAllForExamPaper());
+    }
+
 }

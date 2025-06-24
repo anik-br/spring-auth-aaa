@@ -15,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExamPaper {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,8 +23,8 @@ public class ExamPaper {
     private String title;
     private String createdBy;
 
-    @ManyToMany
-    private List<Question> questions;
+    @OneToMany(mappedBy = "examPaper", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ExamPaperQuestion> examPaperQuestions;
 
     private LocalDateTime createdAt;
     private String duration;
