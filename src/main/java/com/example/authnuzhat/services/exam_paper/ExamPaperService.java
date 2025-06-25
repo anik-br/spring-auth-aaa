@@ -14,9 +14,21 @@ import com.example.authnuzhat.repository.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+
+import com.example.authnuzhat.models.McqOptions;
+
+import com.itextpdf.text.*;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.pdf.*;
+import org.apache.poi.xwpf.usermodel.*;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
+
 import java.util.stream.Collectors;
 
 @Service
@@ -61,6 +73,84 @@ public class ExamPaperService implements IExamPaperService {
                 .stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public byte[] generatePdf(Long examPaperId) {
+        ExamPaper paper = examPaperRepository.findById(examPaperId)
+                .orElseThrow(() -> new RuntimeException("Exam paper not found"));
+
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Document doc = new Document();
+            PdfWriter.getInstance(doc, out);
+            doc.open();
+            doc.add(new Paragraph("Exam Title: " + paper.getTitle()));
+            doc.add(new Paragraph("Created By: " + paper.getCreatedBy()));
+            doc.add(new Paragraph("Duration: " + paper.getDuration()));
+            doc.add(new Paragraph(" "));
+
+            for (ExamPaperQuestion epq : paper.getExamPaperQuestions()) {
+                doc.add(new Paragraph("Q: " + epq.getQuestion().getQuestionText()));
+                if ("MCQ".equalsIgnoreCase(epq.getQuestion().getQuestionType().getName())) {
+                    for (McqOptions opt : epq.getQuestion().getMcqOptions()) {
+                        doc.add(new Paragraph(" - " + opt.getOptionText()));
+                    }
+                }
+                doc.add(new Paragraph("Mark: " + epq.getMark()));
+                doc.add(new Paragraph(" "));
+            }
+
+            doc.close();
+            return out.toByteArray();
+        } catch (IOException | DocumentException e) {
+            throw new RuntimeException("Failed to generate PDF", e);
+        }
+    }
+
+    @Override
+    public byte[] generateDocx(Long examPaperId) {
+        ExamPaper paper = examPaperRepository.findById(examPaperId)
+                .orElseThrow(() -> new RuntimeException("Exam paper not found"));
+
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            XWPFDocument doc = new XWPFDocument();
+            XWPFParagraph title = doc.createParagraph();
+            title.setAlignment(ParagraphAlignment.CENTER);
+            XWPFRun titleRun = title.createRun();
+            titleRun.setText("Exam Title: " + paper.getTitle());
+            titleRun.setBold(true);
+            titleRun.setFontSize(14);
+
+            XWPFParagraph info = doc.createParagraph();
+            XWPFRun infoRun = info.createRun();
+            infoRun.setText("Created By: " + paper.getCreatedBy());
+            infoRun.addBreak();
+            infoRun.setText("Duration: " + paper.getDuration());
+
+            for (ExamPaperQuestion epq : paper.getExamPaperQuestions()) {
+                XWPFParagraph qPara = doc.createParagraph();
+                XWPFRun qRun = qPara.createRun();
+                qRun.addBreak();
+                qRun.setText("Q: " + epq.getQuestion().getQuestionText());
+
+                if ("MCQ".equalsIgnoreCase(epq.getQuestion().getQuestionType().getName())) {
+                    for (McqOptions opt : epq.getQuestion().getMcqOptions()) {
+                        XWPFParagraph optPara = doc.createParagraph();
+                        XWPFRun optRun = optPara.createRun();
+                        optRun.setText(" - " + opt.getOptionText());
+                    }
+                }
+
+                XWPFParagraph markPara = doc.createParagraph();
+                XWPFRun markRun = markPara.createRun();
+                markRun.setText("Mark: " + epq.getMark());
+            }
+
+            doc.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate DOCX", e);
+        }
     }
 
     private ExamPaperResponseDTO mapToResponseDTO(ExamPaper paper) {
