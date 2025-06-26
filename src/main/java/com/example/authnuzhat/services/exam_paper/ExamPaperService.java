@@ -76,6 +76,14 @@ public class ExamPaperService implements IExamPaperService {
     }
 
     @Override
+    public List<ExamPaperResponseDTO> findByCreatedBy(String username) {
+        List<ExamPaper> papers = examPaperRepository.findByCreatedBy(username);
+        return papers.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public byte[] generatePdf(Long examPaperId) {
         ExamPaper paper = examPaperRepository.findById(examPaperId)
                 .orElseThrow(() -> new RuntimeException("Exam paper not found"));
@@ -152,6 +160,8 @@ public class ExamPaperService implements IExamPaperService {
             throw new RuntimeException("Failed to generate DOCX", e);
         }
     }
+
+
 
     private ExamPaperResponseDTO mapToResponseDTO(ExamPaper paper) {
         List<ExamPaperQuestionDTO> questionDTOs = paper.getExamPaperQuestions()

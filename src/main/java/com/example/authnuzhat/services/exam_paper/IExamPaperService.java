@@ -8,6 +8,7 @@ import java.util.List;
 public interface IExamPaperService {
     ExamPaperResponseDTO createExamPaper(ExamPaperRequestDTO requestDTO);
     List<ExamPaperResponseDTO> getAllExamPapers();
+    List<ExamPaperResponseDTO> findByCreatedBy(String username);
     byte[] generatePdf(Long examPaperId);
     byte[] generateDocx(Long examPaperId);
 }
