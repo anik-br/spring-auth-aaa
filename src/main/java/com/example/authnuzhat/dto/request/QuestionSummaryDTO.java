@@ -8,4 +8,5 @@ public class QuestionSummaryDTO {
     private String questionText;
     private String questionType;
     private String subject;
+    private String classLevel;
 }

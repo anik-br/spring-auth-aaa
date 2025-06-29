@@ -161,6 +161,8 @@ public class QuestionService implements IQuestionService{
             dto.setQuestionText(q.getQuestionText());
             dto.setQuestionType(q.getQuestionType().getName());
             dto.setSubject(q.getSubject().getName());
+            dto.setClassLevel(q.getClassLevel().getName());
+
             return dto;
         }).collect(Collectors.toList());
     }
